@@ -1,0 +1,102 @@
+services:
+  # --- EMULATORI ---
+  cosmos-db:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator
+    container_name: cosmos-db
+    hostname: cosmos-db
+    mem_limit: 3g
+    cpu_count: 2
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=3
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+      - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=127.0.0.1
+    ports:
+      - "8081:8081"
+      - "10251-10254:10251-10254"
+    volumes:
+      - ./docker-data/cosmos:/data/db
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    hostname: azurite
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --skipApiVersionCheck"
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./docker-data/azurite:/data
+
+  # Crea il container 'videos' su Azurite all'avvio
+  azurite-init:
+    image: mcr.microsoft.com/azure-cli
+    depends_on:
+      - azurite
+    command: >
+      bash -c "
+      echo 'Waiting for Azurite...';
+      sleep 5;
+      az storage container create --name videos --connection-string 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;' --public-access blob;
+      echo 'Container videos created!';
+      "
+
+  # --- MICROSERVIZI ---
+  
+  # Gateway
+  gateway:
+    build: 
+      context: ./backend             
+      dockerfile: gateway/Dockerfile
+    image: ${DOCKER_USER:-tuousername}/uvod-gateway:latest
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - CATALOG_SERVICE_URL=http://catalog-service:8080
+      - USER_SERVICE_URL=http://user-service:8080
+      - STREAMING_SERVICE_URL=http://streaming-service:8080
+    depends_on:
+      - catalog-service
+      - user-service
+      - streaming-service
+
+  # Catalog Service
+  catalog-service:
+    build: 
+      context: ./backend             
+      dockerfile: catalog/Dockerfile
+    image: ${DOCKER_USER:-tuousername}/uvod-catalog:latest
+    container_name: catalog-service
+    environment:
+      - AZURE_COSMOS_URI=https://cosmos-db:8081
+      - AZURE_COSMOS_KEY=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+      - AZURE_COSMOS_DB=CatalogDB
+    depends_on:
+      - cosmos-db
+
+  # User Service
+  user-service:
+    build: 
+      context: ./backend             
+      dockerfile: user/Dockerfile
+    image: ${DOCKER_USER:-tuousername}/uvod-user:latest
+    container_name: user-service
+    environment:
+      - AZURE_COSMOS_URI=https://cosmos-db:8081
+      - AZURE_COSMOS_KEY=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+      - AZURE_COSMOS_DB=UserDB
+    depends_on:
+      - cosmos-db
+
+  # Streaming Service
+  streaming-service:
+    build: 
+      context: ./backend             
+      dockerfile: streaming/Dockerfile
+    image: ${DOCKER_USER:-tuousername}/uvod-streaming:latest
+    container_name: streaming-service
+    environment:
+      # Connection string standard dell'emulatore
+      - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+    depends_on:
+      - azurite
