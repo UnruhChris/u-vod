@@ -1,30 +1,26 @@
-# STAGE 1: Build
 FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
-
-# 1. Copiamo il Parent POM (Ora visibile grazie al context ./backend)
 COPY pom.xml .
-# Lo installiamo localmente per risolvere le dipendenze
 RUN mvn -B -N install
-
-# 2. Copiamo il servizio specifico (Path relativi alla cartella backend)
-# MODIFICA 'user' CON IL NOME DELLA CARTELLA DEL SERVIZIO!
+COPY common/pom.xml ./common/
+COPY common/src ./common/src
+RUN mvn -f common/pom.xml install -DskipTests
 COPY user/pom.xml ./user/
 COPY user/src ./user/src
-
-# 3. Compiliamo il servizio puntando al suo pom
 RUN mvn -f user/pom.xml package -DskipTests
 
-# STAGE 2: Runtime
 FROM mcr.microsoft.com/openjdk/jdk:17-ubuntu
 WORKDIR /app
 
-RUN groupadd -r uvod && useradd -r -g uvod uvod
-USER uvod
 
-# 4. Copiamo il JAR generato
-# MODIFICA 'user' CON IL NOME DELLA CARTELLA DEL SERVIZIO!
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/user/target/*.jar app.jar
 
+COPY user/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+ENTRYPOINT ["./entrypoint.sh"]  

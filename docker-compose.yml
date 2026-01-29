@@ -15,6 +15,19 @@ services:
       - "10251-10254:10251-10254"
     volumes:
       - ./docker-data/cosmos:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -k https://localhost:8081/_explorer/emulator.pem || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks:
+      backend-net:
+        ipv4_address: 172.20.0.10
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
@@ -25,6 +38,8 @@ services:
       - "10000:10000"
     volumes:
       - ./docker-data/azurite:/data
+    networks:
+      - backend-net
 
   # Crea il container 'videos' su Azurite all'avvio
   azurite-init:
@@ -38,13 +53,15 @@ services:
       az storage container create --name videos --connection-string 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;' --public-access blob;
       echo 'Container videos created!';
       "
+    networks:
+      - backend-net
 
   # --- MICROSERVIZI ---
-  
+
   # Gateway
   gateway:
-    build: 
-      context: ./backend             
+    build:
+      context: ./backend
       dockerfile: gateway/Dockerfile
     image: ${DOCKER_USER:-tuousername}/uvod-gateway:latest
     container_name: gateway
@@ -59,11 +76,13 @@ services:
       - catalog-service
       - user-service
       - streaming-service
+    networks:
+      - backend-net
 
   # Catalog Service
   catalog-service:
-    build: 
-      context: ./backend             
+    build:
+      context: ./backend
       dockerfile: catalog/Dockerfile
     image: ${DOCKER_USER:-tuousername}/uvod-catalog:latest
     container_name: catalog-service
@@ -73,25 +92,31 @@ services:
       - AZURE_COSMOS_DB=CatalogDB
     depends_on:
       - cosmos-db
+    networks:
+      - backend-net
 
   # User Service
   user-service:
-    build: 
-      context: ./backend             
+    build:
+      context: ./backend
       dockerfile: user/Dockerfile
     image: ${DOCKER_USER:-tuousername}/uvod-user:latest
     container_name: user-service
     environment:
-      - AZURE_COSMOS_URI=https://cosmos-db:8081
+      - AZURE_COSMOS_URI=https://172.20.0.10:8081
       - AZURE_COSMOS_KEY=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
       - AZURE_COSMOS_DB=UserDB
+      - JAVA_TOOL_OPTIONS=-Dcom.azure.cosmos.disableServerCertificateValidation=true
     depends_on:
-      - cosmos-db
+      cosmos-db:
+        condition: service_healthy
+    networks:
+      - backend-net
 
   # Streaming Service
   streaming-service:
-    build: 
-      context: ./backend             
+    build:
+      context: ./backend
       dockerfile: streaming/Dockerfile
     image: ${DOCKER_USER:-tuousername}/uvod-streaming:latest
     container_name: streaming-service
@@ -100,3 +125,12 @@ services:
       - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
     depends_on:
       - azurite
+    networks:
+      - backend-net
+
+networks:
+  backend-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

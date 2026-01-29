@@ -1,0 +1,13 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "u-vod-local": {
+      "appLocation": "./frontend",
+      "outputLocation": "dist",
+      "appDevserverUrl": "http://localhost:5173",
+      "apiLocation": "http://localhost:8080",
+      "host": "localhost",
+      "port": 4280
+    }
+  }
+}
