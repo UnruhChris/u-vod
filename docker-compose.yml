@@ -99,7 +99,7 @@ services:
   user-service:
     build:
       context: ./backend
-      dockerfile: user/Dockerfile
+      dockerfile: user/Dockerfile.dev
     image: ${DOCKER_USER:-tuousername}/uvod-user:latest
     container_name: user-service
     environment:
