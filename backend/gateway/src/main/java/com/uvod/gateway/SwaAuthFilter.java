@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 public class SwaAuthFilter implements GlobalFilter, Ordered {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(SwaAuthFilter.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -29,8 +29,9 @@ public class SwaAuthFilter implements GlobalFilter, Ordered {
         if (clientPrincipalBase64 != null) {
             try {
                 // Decode Base64 string
-                String jsonPrincipal = new String(Base64.getDecoder().decode(clientPrincipalBase64), StandardCharsets.UTF_8);
-                
+                String jsonPrincipal = new String(Base64.getDecoder().decode(clientPrincipalBase64),
+                        StandardCharsets.UTF_8);
+
                 // Extract user info from JSON
                 JsonNode rootNode = objectMapper.readTree(jsonPrincipal);
                 String userId = rootNode.path("userId").asText();

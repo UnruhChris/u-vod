@@ -4,8 +4,7 @@
     "u-vod-local": {
       "appLocation": "./frontend",
       "outputLocation": "dist",
-      "appDevserverUrl": "http://localhost:5173",
-      "apiLocation": "http://localhost:8080",
+      "apiDevserverUrl": "http://localhost:3001",
       "host": "localhost",
       "port": 4280
     }

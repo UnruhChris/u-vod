@@ -54,28 +54,35 @@ async function getUserInfo(): Promise<void> {
 }
 
 /**
- * Verifica se l'utente esiste già in Cosmos DB.
- * Se non esiste, reindirizza alla pagina di registrazione.
+ * Verifica se l'utente è registrato tramite l'endpoint dedicato.
+ * Se registrato, carica il profilo completo.
+ * Se non registrato, reindirizza alla pagina di registrazione.
  */
 async function checkUserExists(): Promise<void> {
   isLoadingProfile.value = true
   profileError.value = ''
 
   try {
-    const response = await fetch('/api/user/profile', {
+    // Step 1: Verifica registrazione tramite endpoint dedicato
+    const checkResponse = await fetch('/api/user/is-registered', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include',
     })
 
-    if (response.ok) {
-      // Utente esiste, mostra il profilo
-      const data = await response.json()
-      userProfile.value = data
-    } else if (response.status === 404) {
-      // Utente non trovato, reindirizza alla registrazione
+    if (checkResponse.status === 401) {
+      profileError.value = 'Sessione scaduta. Effettua nuovamente il login.'
+      return
+    }
+
+    if (!checkResponse.ok) {
+      profileError.value = `Errore dal server: ${checkResponse.status} - ${checkResponse.statusText}`
+      return
+    }
+
+    const { registered } = (await checkResponse.json()) as { registered: boolean }
+
+    if (!registered) {
+      // Utente non registrato, reindirizza alla registrazione
       router.push({
         name: 'register',
         query: {
@@ -84,10 +91,19 @@ async function checkUserExists(): Promise<void> {
           provider: userInfo.value?.identityProvider,
         },
       })
-    } else if (response.status === 401) {
-      profileError.value = 'Sessione scaduta. Effettua nuovamente il login.'
+      return
+    }
+
+    // Step 2: Utente registrato, carica il profilo completo
+    const profileResponse = await fetch('/api/user/profile', {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (profileResponse.ok) {
+      userProfile.value = await profileResponse.json()
     } else {
-      profileError.value = `Errore dal server: ${response.status} - ${response.statusText}`
+      profileError.value = `Errore nel caricamento del profilo: ${profileResponse.status}`
     }
   } catch (error) {
     profileError.value = `Errore di rete: ${error instanceof Error ? error.message : String(error)}`
