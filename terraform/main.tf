@@ -1,5 +1,5 @@
-# Questo blocco crea una stringa casuale di 6 caratteri (es. "a9x2b1")
-# per rendere univoci i nomi delle risorse globali.
+# This block creates a random string of 6 characters (e.g. "a9x2b1")
+# to make global resource names unique.
 resource "random_string" "suffix" {
   length  = 6
   special = false 

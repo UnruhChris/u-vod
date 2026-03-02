@@ -1,5 +1,5 @@
-resource "azurerm_container_app" "user_service" {
-  name                         = "${var.project_name}-user"
+resource "azurerm_container_app" "catalog_service" {
+  name                         = "${var.project_name}-catalog"
   resource_group_name          = azurerm_resource_group.rg.name
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   revision_mode                = "Single"
@@ -11,8 +11,8 @@ resource "azurerm_container_app" "user_service" {
 
   template {
     container {
-      name   = "user-container"
-      image  = "ghcr.io/${var.github_username}/uvod-user:latest"
+      name   = "catalog-container"
+      image  = "ghcr.io/${var.github_username}/uvod-catalog:latest"
       cpu    = 0.5
       memory = "1.0Gi"
 
@@ -31,7 +31,6 @@ resource "azurerm_container_app" "user_service" {
         value = azurerm_user_assigned_identity.backend_identity.client_id
       }
 
-      # Startup probe to ensure the container is ready before accepting traffic
       startup_probe {
         transport               = "TCP"
         port                    = 8080
@@ -39,14 +38,12 @@ resource "azurerm_container_app" "user_service" {
         interval_seconds        = 5
         failure_count_threshold = 10
       }
-
     }
 
     min_replicas = 0
   }
 
-
-  # INTERNAL INGRESS: Only other containers in the same environment can call it
+  # INGRESS INTERNO: Solo il gateway può chiamarlo
   ingress {
     external_enabled = false
     target_port      = 8080

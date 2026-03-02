@@ -43,3 +43,12 @@ resource "azurerm_cosmosdb_sql_container" "users" {
   
   partition_key_paths = ["/id"]
 }
+
+resource "azurerm_cosmosdb_sql_container" "films" {
+  name                = "films"
+  resource_group_name = azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.db_account.name
+  database_name       = azurerm_cosmosdb_sql_database.db.name
+  
+  partition_key_paths = ["/genre"]
+}

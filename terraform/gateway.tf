@@ -22,6 +22,11 @@ resource "azurerm_container_app" "gateway_service" {
       }
 
       env {
+        name  = "CATALOG_SERVICE_URL"
+        value = "https://${azurerm_container_app.catalog_service.ingress[0].fqdn}"
+      }
+
+      env {
         name  = "SERVER_FORWARD_HEADERS_STRATEGY"
         value = "framework"
       }

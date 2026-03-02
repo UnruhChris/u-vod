@@ -1,20 +1,20 @@
 variable "project_name" {
-  description = "Nome del progetto, usato per il naming delle risorse"
+  description = "Project name, used for resource naming"
   default     = "u-vod"
 }
 
 variable "location" {
-  description = "Location di default da assegnare alle risorse"
+  description = "Default location to assign to resources"
   default     = "italynorth"
 }
 
 variable "location_alt" {
-  description = "Location di default da assegnare alle risorse"
+  description = "Alternative location to assign to resources"
   default     = "germanywestcentral"
 }
 
 variable "common_tags" {
-  description = "Tag da applicare a tutte le risorse"
+  description = "Tags to apply to all resources"
   default = {
     Environment = "Dev"
     Project     = "U-VoD"
@@ -28,7 +28,7 @@ variable "subscription_id" {
 }
 
 variable "github_username" {
-  description = "Il mio username GitHub"
+  description = "My GitHub username"
   type        = string
   default     = "unruhchris"
 }
