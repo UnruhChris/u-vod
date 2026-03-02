@@ -11,84 +11,84 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.stream.Collectors;
 
 /**
- * Handler globale per le eccezioni comuni a tutti i microservizi.
- * Intercetta le eccezioni e restituisce risposte uniformi.
+ * Global exception handler for exceptions common to all microservices.
+ * Intercepts exceptions and returns uniform responses.
  * 
- * Ordine di priorità: gli handler specifici dei microservizi hanno
- * precedenza su questi handler generici.
+ * Priority order: microservice-specific handlers take
+ * precedence over these generic handlers.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Gestisce header di autenticazione mancante → 401 Unauthorized
+     * Handles missing authentication header → 401 Unauthorized
      */
     @ExceptionHandler(MissingPrincipalException.class)
     public ResponseEntity<ErrorResponse> handleMissingPrincipal(
-            MissingPrincipalException ex, 
+            MissingPrincipalException ex,
             HttpServletRequest request) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
     /**
-     * Gestisce header di autenticazione non valido → 401 Unauthorized
+     * Handles invalid authentication header → 401 Unauthorized
      */
     @ExceptionHandler(InvalidPrincipalException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPrincipal(
-            InvalidPrincipalException ex, 
+            InvalidPrincipalException ex,
             HttpServletRequest request) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
     /**
-     * Gestisce errori di validazione Bean Validation (@Valid) → 400 Bad Request
-     * Estrae tutti i messaggi di errore dai campi non validi.
+     * Handles Bean Validation errors (@Valid) → 400 Bad Request
+     * Extracts all error messages from invalid fields.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
-            MethodArgumentNotValidException ex, 
+            MethodArgumentNotValidException ex,
             HttpServletRequest request) {
-        
-        // Raccoglie tutti gli errori di validazione in un unico messaggio
+
+        // Collects all validation errors into a single message
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining("; "));
-        
+
         return buildResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
     /**
-     * Fallback per eccezioni non gestite → 500 Internal Server Error
-     * In produzione, evita di esporre dettagli interni.
+     * Fallback for unhandled exceptions → 500 Internal Server Error
+     * In production, avoid exposing internal details.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(
-            Exception ex, 
+            Exception ex,
             HttpServletRequest request) {
-        // Log dell'errore (in un'app reale useresti un logger)
+        // Log the error (in a real app you would use a logger)
         ex.printStackTrace();
-        
+
         return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, 
-                "Errore interno del server", 
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal server error",
                 request);
     }
 
     /**
-     * Helper per costruire la risposta di errore.
+     * Helper to build the error response.
      */
     private ResponseEntity<ErrorResponse> buildResponse(
-            HttpStatus status, 
-            String message, 
+            HttpStatus status,
+            String message,
             HttpServletRequest request) {
-        
+
         ErrorResponse error = ErrorResponse.builder()
                 .status(status.value())
                 .error(status.getReasonPhrase())
                 .message(message)
                 .path(request.getRequestURI())
                 .build();
-        
+
         return ResponseEntity.status(status).body(error);
     }
 }

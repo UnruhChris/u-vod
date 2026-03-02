@@ -1,8 +1,8 @@
 package com.uvod.common.exception;
 
 /**
- * Lanciata quando l'header x-ms-client-principal è assente.
- * Indica che l'utente non è autenticato.
+ * Thrown when the x-ms-client-principal header is missing.
+ * Indicates that the user is not authenticated.
  */
 public class MissingPrincipalException extends RuntimeException {
     

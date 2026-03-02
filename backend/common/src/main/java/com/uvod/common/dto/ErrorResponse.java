@@ -8,28 +8,28 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * DTO standard per le risposte di errore dell'API.
- * Fornisce una struttura uniforme per tutti gli errori.
+ * Standard DTO for API error responses.
+ * Provides a uniform structure for all errors.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ErrorResponse {
-    
-    /** HTTP status code (es. 404, 500) */
+
+    /** HTTP status code (e.g. 404, 500) */
     private int status;
-    
-    /** Nome dell'errore HTTP (es. "Not Found", "Internal Server Error") */
+
+    /** HTTP error name (e.g. "Not Found", "Internal Server Error") */
     private String error;
-    
-    /** Messaggio descrittivo dell'errore */
+
+    /** Descriptive error message */
     private String message;
-    
-    /** Path della richiesta che ha generato l'errore */
+
+    /** Request path that generated the error */
     private String path;
-    
-    /** Timestamp dell'errore in formato ISO-8601 */
+
+    /** Error timestamp in ISO-8601 format */
     @Builder.Default
     private String timestamp = Instant.now().toString();
 }

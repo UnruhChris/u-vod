@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility per decodificare l'header x-ms-client-principal di Azure Static Web
+ * Utility to decode the x-ms-client-principal header from Azure Static Web
  * Apps.
  * 
- * L'header contiene un JSON codificato in Base64 con questa struttura:
+ * The header contains a Base64-encoded JSON with this structure:
  * {
  * "userId": "abc123",
  * "userDetails": "user@example.com",
@@ -26,27 +26,27 @@ public final class PrincipalParser {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    // Costruttore privato: utility class, non istanziabile
+    // Private constructor: utility class, not instantiable
     private PrincipalParser() {
         throw new UnsupportedOperationException("Utility class");
     }
 
     /**
-     * Decodifica l'header x-ms-client-principal.
+     * Decodes the x-ms-client-principal header.
      *
-     * @param principalHeader Header Base64-encoded (può essere null)
-     * @return ClientPrincipal con i dati dell'utente
-     * @throws MissingPrincipalException se l'header è null o vuoto
-     * @throws InvalidPrincipalException se l'header non è valido
+     * @param principalHeader Base64-encoded header (can be null)
+     * @return ClientPrincipal with the user data
+     * @throws MissingPrincipalException if the header is null or empty
+     * @throws InvalidPrincipalException if the header is invalid
      */
     public static ClientPrincipal parse(String principalHeader) {
-        // 1. Verifica presenza header
+        // 1. Check header presence
         if (principalHeader == null || principalHeader.isBlank()) {
-            throw new MissingPrincipalException("Header x-ms-client-principal mancante");
+            throw new MissingPrincipalException("Missing x-ms-client-principal header");
         }
 
         try {
-            // 2. Decodifica Base64
+            // 2. Decode Base64
             byte[] decodedBytes = Base64.getDecoder().decode(principalHeader);
             String json = new String(decodedBytes, StandardCharsets.UTF_8);
 
@@ -54,17 +54,17 @@ public final class PrincipalParser {
             @SuppressWarnings("unchecked")
             Map<String, Object> map = OBJECT_MAPPER.readValue(json, Map.class);
 
-            // 4. Estrai userId (obbligatorio)
+            // 4. Extract userId (required)
             String userId = (String) map.get("userId");
             if (userId == null || userId.isBlank()) {
-                throw new InvalidPrincipalException("userId mancante nel principal");
+                throw new InvalidPrincipalException("userId missing in principal");
             }
 
-            // 5. Estrai altri campi (opzionali)
+            // 5. Extract other fields (optional)
             @SuppressWarnings("unchecked")
             List<String> roles = (List<String>) map.getOrDefault("userRoles", List.of());
 
-            // 6. Costruisci e restituisci DTO
+            // 6. Build and return DTO
             return ClientPrincipal.builder()
                     .userId(userId)
                     .userDetails((String) map.get("userDetails"))
@@ -73,14 +73,14 @@ public final class PrincipalParser {
                     .build();
 
         } catch (IllegalArgumentException e) {
-            // Base64.getDecoder().decode() fallito
-            throw new InvalidPrincipalException("Header non è un Base64 valido", e);
+            // Base64.getDecoder().decode() failed
+            throw new InvalidPrincipalException("Header is not valid Base64", e);
         } catch (InvalidPrincipalException e) {
-            // Ri-lancia le nostre eccezioni
+            // Re-throw our exceptions
             throw e;
         } catch (Exception e) {
-            // Qualsiasi altro errore (JSON malformato, ecc.)
-            throw new InvalidPrincipalException("Errore nel parsing del principal: " + e.getMessage(), e);
+            // Any other error (malformed JSON, etc.)
+            throw new InvalidPrincipalException("Error parsing principal: " + e.getMessage(), e);
         }
     }
 }

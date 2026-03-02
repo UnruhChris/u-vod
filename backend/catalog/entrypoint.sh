@@ -6,7 +6,7 @@ COSMOS_PORT="8081"
 
 echo "⏳ Waiting for Cosmos DB Emulator at $COSMOS_HOST:$COSMOS_PORT..."
 
-# Wait loop
+# Loop di attesa
 until curl -k -f "https://$COSMOS_HOST:$COSMOS_PORT/_explorer/emulator.pem" -o /tmp/emulator.cert; do
   echo "zzz... Cosmos DB not ready yet. Retrying in 5s..."
   sleep 5
@@ -14,28 +14,24 @@ done
 
 echo "✅ Cosmos DB found! Certificate downloaded."
 
-# FIND THE CORRECT CACERTS PATH
+# TROVA IL PERCORSO CORRETTO DI CACERTS
 if [ -f "$JAVA_HOME/lib/security/cacerts" ]; then
     CACERTS_PATH="$JAVA_HOME/lib/security/cacerts"
 elif [ -f "$JAVA_HOME/conf/security/cacerts" ]; then
     CACERTS_PATH="$JAVA_HOME/conf/security/cacerts"
 else
-    # Brute-force fallback: search the file anywhere under JAVA_HOME
     CACERTS_PATH=$(find $JAVA_HOME -name cacerts | head -n 1)
 fi
 
 echo "🔑 Importing certificate into Java Keystore at: $CACERTS_PATH"
 
-# Import the certificate
+# Importiamo il certificato
 keytool -importcert -alias cosmos-emulator \
     -keystore "$CACERTS_PATH" \
     -file /tmp/emulator.cert \
     -storepass changeit \
     -noprompt
 
-echo "🚀 Starting User Service..."
+echo "🚀 Starting Catalog Service..."
 
-# This flag tells the Azure SDK to ignore if the hostname (cosmos-db)
-# does not match the name in the certificate (localhost).
-# Essential in Docker Dev environment.
 exec java -Dcom.azure.cosmos.disableServerCertificateValidation=true -jar app.jar

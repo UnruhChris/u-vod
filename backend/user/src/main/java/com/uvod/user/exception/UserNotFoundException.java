@@ -1,13 +1,13 @@
 package com.uvod.user.exception;
 
 /**
- * Eccezione lanciata quando un utente non viene trovato nel database.
- * Viene convertita in HTTP 404 Not Found da UserExceptionHandler.
+ * Exception thrown when a user is not found in the database.
+ * Converted to HTTP 404 Not Found by UserExceptionHandler.
  */
 public class UserNotFoundException extends RuntimeException {
 
     public UserNotFoundException(String userId) {
-        super("Utente non trovato con ID: " + userId);
+        super("User not found with ID: " + userId);
     }
 
     public UserNotFoundException(String message, boolean customMessage) {

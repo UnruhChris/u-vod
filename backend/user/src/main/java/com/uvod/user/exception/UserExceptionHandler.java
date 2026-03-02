@@ -10,18 +10,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Handler per le eccezioni specifiche del dominio User.
+ * Handler for User domain-specific exceptions.
  * 
- * @Order(Ordered.HIGHEST_PRECEDENCE) garantisce che questo handler
- *                                    venga valutato PRIMA del
- *                                    GlobalExceptionHandler di common.
+ * @Order(Ordered.HIGHEST_PRECEDENCE) ensures that this handler
+ *                                    is evaluated BEFORE the
+ *                                    GlobalExceptionHandler from common.
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class UserExceptionHandler {
 
     /**
-     * Gestisce UserNotFoundException → 404 Not Found
+     * Handles UserNotFoundException → 404 Not Found
      */
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(
@@ -31,7 +31,7 @@ public class UserExceptionHandler {
     }
 
     /**
-     * Gestisce UserAlreadyExistsException → 409 Conflict
+     * Handles UserAlreadyExistsException → 409 Conflict
      */
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(
@@ -41,8 +41,8 @@ public class UserExceptionHandler {
     }
 
     /**
-     * Helper per costruire la risposta di errore.
-     * Usa lo stesso formato di ErrorResponse del modulo common.
+     * Helper to build the error response.
+     * Uses the same ErrorResponse format from the common module.
      */
     private ResponseEntity<ErrorResponse> buildResponse(
             HttpStatus status,

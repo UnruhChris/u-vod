@@ -1,8 +1,8 @@
 package com.uvod.common.exception;
 
 /**
- * Lanciata quando l'header x-ms-client-principal non è valido
- * (non è Base64, JSON malformato, userId mancante, ecc.)
+ * Thrown when the x-ms-client-principal header is invalid
+ * (not Base64, malformed JSON, missing userId, etc.)
  */
 public class InvalidPrincipalException extends RuntimeException {
     

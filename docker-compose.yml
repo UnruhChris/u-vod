@@ -1,7 +1,7 @@
 services:
-  # --- EMULATORI ---
+  # --- EMULATORS ---
   cosmos-db:
-    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
     container_name: cosmos-db
     hostname: cosmos-db
     mem_limit: 3g
@@ -41,7 +41,7 @@ services:
     networks:
       - backend-net
 
-  # Crea il container 'videos' su Azurite all'avvio
+  # Create the 'videos' container on Azurite at startup
   azurite-init:
     image: mcr.microsoft.com/azure-cli
     depends_on:
@@ -56,7 +56,7 @@ services:
     networks:
       - backend-net
 
-  # --- MICROSERVIZI ---
+  # --- MICROSERVICES ---
 
   # Gateway
   gateway:
@@ -83,15 +83,17 @@ services:
   catalog-service:
     build:
       context: ./backend
-      dockerfile: catalog/Dockerfile
+      dockerfile: catalog/Dockerfile.dev
     image: ${DOCKER_USER:-tuousername}/uvod-catalog:latest
     container_name: catalog-service
     environment:
-      - AZURE_COSMOS_URI=https://cosmos-db:8081
+      - AZURE_COSMOS_URI=https://172.20.0.10:8081
       - AZURE_COSMOS_KEY=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
       - AZURE_COSMOS_DB=CatalogDB
+      - JAVA_TOOL_OPTIONS=-Dcom.azure.cosmos.disableServerCertificateValidation=true
     depends_on:
-      - cosmos-db
+      cosmos-db:
+        condition: service_healthy
     networks:
       - backend-net
 
@@ -121,7 +123,7 @@ services:
     image: ${DOCKER_USER:-tuousername}/uvod-streaming:latest
     container_name: streaming-service
     environment:
-      # Connection string standard dell'emulatore
+      # Standard emulator connection string
       - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
     depends_on:
       - azurite

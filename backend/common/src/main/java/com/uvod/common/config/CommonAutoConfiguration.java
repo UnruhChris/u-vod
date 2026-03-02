@@ -5,15 +5,15 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 /**
- * Auto-configurazione per il modulo common.
- * Registra automaticamente i componenti condivisi quando
- * un microservizio importa questa libreria come dipendenza.
+ * Auto-configuration for the common module.
+ * Automatically registers shared components when
+ * a microservice imports this library as a dependency.
  */
 @AutoConfiguration
 public class CommonAutoConfiguration {
 
     /**
-     * Registra il GlobalExceptionHandler come bean.
+     * Registers the GlobalExceptionHandler as a bean.
      */
     @Bean
     public GlobalExceptionHandler globalExceptionHandler() {

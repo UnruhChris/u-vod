@@ -1,7 +1,5 @@
 package com.uvod.user.controller;
 
-import com.uvod.common.dto.ClientPrincipal;
-import com.uvod.common.security.PrincipalParser;
 import com.uvod.user.dto.RegisterRequest;
 import com.uvod.user.dto.UserResponse;
 import com.uvod.user.service.UserService;
@@ -12,6 +10,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Controller for user management.
+ *
+ * Authentication is handled by the Gateway (Gateway Offloading Pattern):
+ * the gateway decodes x-ms-client-principal and injects clean headers
+ * X-User-Id, X-User-Name, X-User-Provider.
+ */
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -24,44 +29,40 @@ public class UserController {
 
     /**
      * GET /user/profile
-     * Restituisce il profilo utente se esiste, altrimenti 404.
+     * Returns the user profile if it exists, otherwise 404.
      */
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(
-            @RequestHeader(value = "x-ms-client-principal", required = false) String principalHeader) {
+            @RequestHeader("X-User-Id") String userId) {
 
-        ClientPrincipal principal = PrincipalParser.parse(principalHeader);
-        UserResponse response = userService.getProfile(principal.getUserId());
-
+        UserResponse response = userService.getProfile(userId);
         return ResponseEntity.ok(response);
     }
 
     /**
      * GET /user/is-registered
-     * Verifica se l'utente è già registrato (utile per il frontend).
+     * Checks if the user is already registered (useful for the frontend).
      */
     @GetMapping("/is-registered")
     public ResponseEntity<Map<String, Boolean>> isRegistered(
-            @RequestHeader(value = "x-ms-client-principal", required = false) String principalHeader) {
+            @RequestHeader("X-User-Id") String userId) {
 
-        ClientPrincipal principal = PrincipalParser.parse(principalHeader);
-        boolean registered = userService.isRegistered(principal.getUserId());
-
+        boolean registered = userService.isRegistered(userId);
         return ResponseEntity.ok(Map.of("registered", registered));
     }
 
     /**
      * POST /user/register
-     * Registra un nuovo utente. Restituisce 409 se già esiste.
+     * Registers a new user. Returns 409 if already exists.
      */
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(
-            @RequestHeader(value = "x-ms-client-principal", required = false) String principalHeader,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Name") String userName,
+            @RequestHeader("X-User-Provider") String provider,
             @Valid @RequestBody RegisterRequest request) {
 
-        ClientPrincipal principal = PrincipalParser.parse(principalHeader);
-        UserResponse response = userService.register(principal, request);
-
+        UserResponse response = userService.register(userId, userName, provider, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
