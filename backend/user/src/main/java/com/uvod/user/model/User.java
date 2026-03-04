@@ -25,17 +25,19 @@ public class User {
     @PartitionKey
     private String id;
 
-    private String visibleUsername;
+    private String username;
 
     private String email;
 
     private String identityProvider;
 
-    private String providerUsername;
+    private String avatarUrl;
 
-    private Instant registrationDate;
+    private SupportedLocale locale;
 
-    private List<String> favorites;
+    private Instant createdAt;
 
-    private List<String> watchHistory;
+    private Instant updatedAt;
+
+    private List<FavoriteItem> favorites;
 }

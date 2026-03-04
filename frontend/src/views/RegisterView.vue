@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import RegisterForm from '@/components/RegisterForm.vue'
+import UserForm from '@/components/UserForm.vue'
 </script>
 
 <template>
   <main class="register-page">
     <div class="register-page__card">
       <div class="register-page__brand"><span class="register-page__brand-u">U</span>-VoD</div>
-      <RegisterForm />
+      <UserForm mode="register" />
     </div>
   </main>
 </template>

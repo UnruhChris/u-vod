@@ -1,6 +1,8 @@
 package com.uvod.user.mapper;
 
+import com.uvod.user.dto.FavoriteRequest;
 import com.uvod.user.dto.UserResponse;
+import com.uvod.user.model.FavoriteItem;
 import com.uvod.user.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,17 +23,20 @@ public interface UserMapper {
      * Converts User entity to UserResponse DTO.
      * 
      * Automatic mappings (same name):
-     * - id → id
-     * - visibleUsername → visibleUsername
-     * - email → email
-     * - favorites → favorites
-     * - watchHistory → watchHistory
+     * - id, username, email, avatarUrl, locale, favorites
      * 
-     * Custom mapping:
-     * - registrationDate (Instant) → registrationDate (String)
+     * Custom mappings:
+     * - createdAt (Instant) → createdAt (String)
+     * - updatedAt (Instant) → updatedAt (String)
      */
-    @Mapping(target = "registrationDate", source = "registrationDate", qualifiedByName = "instantToString")
+    @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "instantToString")
+    @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "instantToString")
     UserResponse toResponse(User user);
+
+    /**
+     * Converts FavoriteRequest DTO to FavoriteItem model.
+     */
+    FavoriteItem toFavoriteItem(FavoriteRequest request);
 
     /**
      * Converts Instant to ISO-8601 String.

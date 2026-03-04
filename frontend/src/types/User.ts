@@ -1,10 +1,25 @@
+export interface FavoriteItem {
+  movieId: string
+  slug: string
+  title: string
+  description: string
+  releaseYear: number
+  genre: string
+  durationInMinutes: number
+  thumbnailUrl: string
+  cast: string[]
+  tags: string[]
+}
+
 export interface UserProfile {
   id: string
-  visibleUsername: string
+  username: string
   email: string | null
-  registrationDate: string
-  favorites: string[]
-  watchHistory: string[]
+  avatarUrl: string | null
+  locale: string
+  createdAt: string
+  updatedAt: string
+  favorites: FavoriteItem[]
 }
 
 export interface ClientPrincipal {

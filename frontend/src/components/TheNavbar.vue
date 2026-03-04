@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { DEFAULT_AVATAR } from '@/constants/avatars'
 
 const auth = useAuthStore()
 </script>
@@ -17,7 +18,14 @@ const auth = useAuthStore()
     </div>
 
     <div class="navbar__right">
-      <span class="navbar__user">{{ auth.userName }}</span>
+      <RouterLink to="/profile" class="navbar__profile-link">
+        <img
+          :src="auth.userProfile?.avatarUrl || DEFAULT_AVATAR"
+          alt="Avatar"
+          class="navbar__avatar"
+        />
+        <span class="navbar__user">{{ auth.userProfile?.username || auth.userName }}</span>
+      </RouterLink>
       <a href="/.auth/logout" class="navbar__logout" @click.prevent="auth.logout()">Esci</a>
     </div>
   </nav>
@@ -45,6 +53,26 @@ const auth = useAuthStore()
   display: flex;
   align-items: center;
   gap: var(--space-md);
+}
+
+.navbar__profile-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.navbar__profile-link:hover {
+  opacity: 0.85;
+}
+
+.navbar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
 }
 
 .navbar__logo {

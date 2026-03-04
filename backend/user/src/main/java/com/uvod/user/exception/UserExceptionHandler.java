@@ -41,6 +41,16 @@ public class UserExceptionHandler {
     }
 
     /**
+     * Handles FavoriteLimitReachedException → 400 Bad Request
+     */
+    @ExceptionHandler(FavoriteLimitReachedException.class)
+    public ResponseEntity<ErrorResponse> handleFavoriteLimitReached(
+            FavoriteLimitReachedException ex,
+            HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    /**
      * Helper to build the error response.
      * Uses the same ErrorResponse format from the common module.
      */

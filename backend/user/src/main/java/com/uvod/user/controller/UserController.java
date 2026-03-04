@@ -1,6 +1,8 @@
 package com.uvod.user.controller;
 
+import com.uvod.user.dto.FavoriteRequest;
 import com.uvod.user.dto.RegisterRequest;
+import com.uvod.user.dto.UpdateProfileRequest;
 import com.uvod.user.dto.UserResponse;
 import com.uvod.user.service.UserService;
 import jakarta.validation.Valid;
@@ -58,11 +60,50 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(
             @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Name") String userName,
             @RequestHeader("X-User-Provider") String provider,
             @Valid @RequestBody RegisterRequest request) {
 
-        UserResponse response = userService.register(userId, userName, provider, request);
+        UserResponse response = userService.register(userId, provider, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * PUT /user/profile
+     * Updates the user's profile (username, avatarUrl, locale).
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody UpdateProfileRequest request) {
+
+        UserResponse response = userService.updateProfile(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /user/favorites
+     * Adds a film to the user's favorites. Idempotent: returns 200 if already
+     * present.
+     */
+    @PostMapping("/favorites")
+    public ResponseEntity<UserResponse> addFavorite(
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody FavoriteRequest request) {
+
+        UserResponse response = userService.addFavorite(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * DELETE /user/favorites/{movieId}
+     * Removes a film from the user's favorites. Idempotent.
+     */
+    @DeleteMapping("/favorites/{movieId}")
+    public ResponseEntity<UserResponse> removeFavorite(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable String movieId) {
+
+        UserResponse response = userService.removeFavorite(userId, movieId);
+        return ResponseEntity.ok(response);
     }
 }

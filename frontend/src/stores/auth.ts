@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ClientPrincipal, AuthPayload, UserProfile } from '@/types/User'
+import type { ClientPrincipal, AuthPayload, UserProfile, FavoriteItem } from '@/types/User'
 
 export const useAuthStore = defineStore('auth', () => {
   // --- State ---
@@ -15,6 +15,15 @@ export const useAuthStore = defineStore('auth', () => {
   const userId = computed(() => clientPrincipal.value?.userId ?? '')
   const userName = computed(() => clientPrincipal.value?.userDetails ?? '')
   const provider = computed(() => clientPrincipal.value?.identityProvider ?? '')
+  const avatarUrl = computed(() => userProfile.value?.avatarUrl ?? null)
+  const favorites = computed(() => userProfile.value?.favorites ?? [])
+
+  /**
+   * Checks if a film is in the user's favorites
+   */
+  function isFavorite(movieId: string): boolean {
+    return favorites.value.some((f) => f.movieId === movieId)
+  }
 
   // --- Actions ---
 
@@ -81,7 +90,12 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Registers a new user
    */
-  async function register(visibleUsername: string, email: string) {
+  async function register(data: {
+    username: string
+    email: string
+    avatarUrl?: string
+    locale?: string
+  }) {
     isLoading.value = true
     error.value = null
     try {
@@ -89,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ visibleUsername, email }),
+        body: JSON.stringify(data),
       })
 
       if (response.status === 401) {
@@ -101,8 +115,8 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
       if (!response.ok) {
-        const data = await response.json()
-        error.value = data.message || 'Error during registration'
+        const res = await response.json()
+        error.value = res.message || 'Error during registration'
         return false
       }
 
@@ -114,6 +128,88 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /**
+   * Updates the user's profile (username, avatarUrl, locale)
+   */
+  async function updateProfile(data: { username: string; avatarUrl?: string; locale?: string }) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const res = await response.json()
+        error.value = res.message || 'Error updating profile'
+        return false
+      }
+
+      userProfile.value = await response.json()
+      return true
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Adds a film to favorites
+   */
+  async function addFavorite(item: FavoriteItem) {
+    error.value = null
+    try {
+      const response = await fetch('/api/user/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(item),
+      })
+
+      if (!response.ok) {
+        const res = await response.json()
+        error.value = res.message || 'Error adding favorite'
+        return false
+      }
+
+      userProfile.value = await response.json()
+      return true
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return false
+    }
+  }
+
+  /**
+   * Removes a film from favorites
+   */
+  async function removeFavorite(movieId: string) {
+    error.value = null
+    try {
+      const response = await fetch(`/api/user/favorites/${movieId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const res = await response.json()
+        error.value = res.message || 'Error removing favorite'
+        return false
+      }
+
+      userProfile.value = await response.json()
+      return true
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return false
     }
   }
 
@@ -144,10 +240,16 @@ export const useAuthStore = defineStore('auth', () => {
     userId,
     userName,
     provider,
+    avatarUrl,
+    favorites,
+    isFavorite,
     checkAuth,
     checkRegistration,
     fetchProfile,
     register,
+    updateProfile,
+    addFavorite,
+    removeFavorite,
     initialize,
     logout,
   }

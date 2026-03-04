@@ -22,6 +22,11 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
     },
     {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/ProfileView.vue'),
+    },
+    {
       path: '/title/:slug',
       name: 'film-detail',
       component: () => import('@/views/FilmDetailView.vue'),
@@ -56,6 +61,9 @@ router.beforeEach(async (to) => {
 
   // If authenticated but not registered, force registration
   if (!auth.isRegistered && to.name !== 'register') return '/register'
+
+  // If already registered, prevent access to register page
+  if (auth.isRegistered && to.name === 'register') return '/home'
 
   return true
 })
